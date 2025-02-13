@@ -47,5 +47,13 @@ export default class AnimalService {
     const response = await $api.get(`${API_URL}/user/adoptions/stats/${userId}`);
     return response.data;
   }
+  static async moderateAdoption(id: string, approved: boolean) { 
+    const response = await $api.post<AnimalResponse>(`${API_URL}/animals/${id}/moderate`, { approved });
+    return response;
+  }
 
+  static async getUniqueSpecies() {
+    const response = await $api.get(`${API_URL}/animals/speciesFilter`);
+    return response;
+  }
 }

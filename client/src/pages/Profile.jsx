@@ -1,12 +1,22 @@
 import { observer } from "mobx-react-lite";
 import { store } from "../stores/store";
-import { PencilSquareIcon, UserIcon, AtSymbolIcon, HeartIcon, CalendarIcon } from "@heroicons/react/24/outline";
+import { PencilSquareIcon, UserIcon, AtSymbolIcon, HeartIcon, } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import EditProfileModal from "../components/EditProfileModal";
 import { Navigate } from "react-router-dom";
 
 const Profile = observer(() => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const translateRole = (role) => {
+        const roleTranslations = {
+            'user': 'Пользователь',
+            'volunteer': 'Волонтер',
+            'moderator': 'Модератор',
+            'admin': 'Администратор'
+        };
+        return roleTranslations[role] || role;
+    };
 
     if (store.isModerator) {
         return <Navigate to="/moderator" replace />;
@@ -16,8 +26,25 @@ const Profile = observer(() => {
         await store.updateProfile(store.user.id, fieldsToUpdate);
     };
 
+    const handleVolunteerApplication = async () => {
+        try {
+            const volunteerData = {
+                userId: store.user.id,
+                email: store.user.email,
+                username: store.user.username,
+                role: store.user.role,
+            };
+            await store.applyForVolunteer(volunteerData);
+            await store.checkVolunteerApplicationStatus(store.user.id);
+        } catch (error) {
+            console.error("Ошибка при подаче заявки:", error);
+
+        }
+    };
+
     useEffect(() => {
         store.loadUserAdoptionData(store.user.id);
+        store.checkVolunteerApplicationStatus(store.user.id);
     }, []);
 
     return (
@@ -30,6 +57,23 @@ const Profile = observer(() => {
                     </h1>
                     <p className="text-gray-600 mt-2">Управляйте вашими данными и активностью</p>
                 </div>
+                <div className="flex flex-row gap-4">
+                <button
+                        onClick={handleVolunteerApplication}
+                        className={`flex items-center bg-gradient-to-r ${
+                            store.user.role === 'volunteer' || store.volunteerApplicationPending
+                            ? 'from-gray-300 to-gray-400 cursor-not-allowed' 
+                            : 'from-purple-300 to-pink-400 hover:from-purple-400 hover:to-pink-500'
+                        } text-white px-6 py-3 rounded-lg transition duration-300 shadow-lg`}
+                        disabled={store.user.role === 'volunteer' || store.volunteerApplicationPending}
+                    >
+                        {store.user.role === 'volunteer' 
+                            ? 'Вы уже волонтер' 
+                            : store.volunteerApplicationPending 
+                                ? 'Заявка на рассмотрении'
+                                : 'Подать на волонтерство'
+                        }
+                    </button>
                 <button
                     onClick={() => setIsModalOpen(true)}
                     className="flex items-center bg-gradient-to-r from-pink-300 to-purple-400 text-white px-6 py-3 rounded-lg hover:from-pink-400 hover:to-purple-500 transition duration-300 shadow-lg"
@@ -37,6 +81,7 @@ const Profile = observer(() => {
                     <PencilSquareIcon className="h-5 w-5 mr-2" />
                     Редактировать профиль
                 </button>
+                </div>
             </div>
             {/* Main Content */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -68,7 +113,7 @@ const Profile = observer(() => {
                                 <UserIcon className="h-5 w-5 mr-2 text-pink-300" />
                                 <p className="text-gray-700">
                                     <span className="font-medium">Статус:</span>{" "}
-                                    <span className="font-semibold">{store.user.role}</span>
+                                    <span className="font-semibold">{translateRole(store.user.role)}</span>
                                 </p>
                             </div>
                         </div>
@@ -92,8 +137,7 @@ const Profile = observer(() => {
                             </div>
                             <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-6 rounded-lg shadow-md">
                                 <p className="text-sm text-gray-600">Последнее усыновление</p>
-                                <p className="text-2xl font-bold text-pink-500 flex items-center">
-                                    <CalendarIcon className="h-5 w-5 mr-2" />
+                                <p className="text-2xl font-bold text-transparent bg-gradient-to-r from-pink-300 to-purple-400 flex items-center bg-clip-text">
                                     {new Date(store.user.lastAdoptionDate).toLocaleDateString()}
                                 </p>
                             </div>

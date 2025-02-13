@@ -1,4 +1,4 @@
-interface IAdoption {
+export interface IAdoption {
     _id: string;
     name: string;
     species: string;

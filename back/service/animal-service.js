@@ -61,15 +61,48 @@ class AnimalService {
     async adoptAnimal(id, adoptedBy) {
         const animal = await AnimalModel.findByIdAndUpdate(
             id,
-            { status: 'adopted', adoptedBy },
+            { 
+                status: 'Ожидание', 
+                adoptedBy,
+                adoptionRequest: {
+                    userId: adoptedBy,
+                    status: 'Ожидание',
+                    createdAt: new Date()
+                }
+            },
             { new: true }
-        );
+        ).populate('adoptedBy', 'username'); 
 
         if (!animal) {
             throw ApiError.NotFound('Животное не найдено');
         }
 
         return animal;
+    }
+
+    async moderateAdoption(id, approved) {
+        const animal = await AnimalModel.findById(id);
+        
+        if (!animal) {
+            throw ApiError.NotFound('Животное не найдено');
+        }
+
+        const status = approved ? 'Усыновлен' : 'Доступен';
+        
+        const updatedAnimal = await AnimalModel.findByIdAndUpdate(
+            id,
+            { 
+                status,
+                adoptedBy: approved ? animal.adoptedBy : null,
+                adoptionDate: approved ? new Date() : null,
+                adoptionRequest: approved ? 
+                    { ...animal.adoptionRequest, status: 'Принято' } : 
+                    { ...animal.adoptionRequest, status: 'Отклонено' }
+            },
+            { new: true }
+        );
+
+        return updatedAnimal;
     }
     
     async getAnimalsByFilters(filters) {
@@ -109,6 +142,22 @@ class AnimalService {
             lastAdoptionDate
         };
     }
+
+    async getUniqueSpecies() {
+        try {
+            const species = await AnimalModel.distinct('species');
+    
+            if (!species || species.length === 0) {
+                return []; // Возвращаем пустой массив, если нет данных
+            }
+    
+            return species.sort();
+        } catch (error) {
+            console.error("Ошибка при получении уникальных видов:", error);
+            throw error;
+        }
+    }
+
 }
 
 module.exports = new AnimalService();

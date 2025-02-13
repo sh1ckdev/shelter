@@ -8,10 +8,13 @@ import axios from 'axios';
 import { API_URL } from '../http';
 import { IUser } from '../models/IUser';
 import { AuthResponse } from '../models/response/AuthResponse';
+import { IAdoption } from '../models/IAdoption';
+import { IVolunteerData } from '../models/IVolunteer';
 
 class Store {
   isAuth = false;
   isAdmin = false;
+  volunteerApplicationPending = false;
   isModerator = false;
   user = {} as IUser;
   isLoadingAuth = false;
@@ -47,6 +50,9 @@ class Store {
   }
   setAdoptions(adoptions: IAdoption[]) {
     this.adoptions = adoptions;
+  }
+  setVolunteerApplicationPending(status: boolean) {
+    this.volunteerApplicationPending = status;
   }
 
 
@@ -364,18 +370,65 @@ class Store {
     }
   }
 
-  // Методы для работы с волонтерами
-  async registerVolunteer(volunteerData: object) {
+
+  async checkVolunteerApplicationStatus(userId: string) {
+    try {
+      const response = await VolunteerService.checkApplicationStatus(userId);
+      runInAction(() => {
+        this.setVolunteerApplicationPending(response.data === 'pending');
+      });
+    } catch (e) {
+      console.error('Ошибка проверки статуса заявки:', e);
+    }
+  }
+
+  async applyForVolunteer(volunteerData: IVolunteerData) {
     try {
       this.setLoading(true);
-      const response = await VolunteerService.registerVolunteer(volunteerData);
+      const response = await VolunteerService.applyForVolunteer(volunteerData);
       runInAction(() => {
-        this.setMessage("Волонтер успешно зарегистрирован");
+        this.setMessage('Заявка на волонтера успешно подана');
         return response.data;
       });
     } catch (e) {
-      console.error('Ошибка регистрации волонтера:', e);
-      this.setMessage('Ошибка регистрации волонтера. Попробуйте еще раз.');
+      console.error('Ошибка подачи заявки на волонтера:', e);
+      this.setMessage('Ошибка подачи заявки на волонтера. Попробуйте еще раз.');
+    } finally {
+      runInAction(() => {
+        this.setLoading(false);
+      });
+    }
+  }
+
+  async approveVolunteer(id: string) {
+    try {
+      this.setLoading(true);
+      const response = await VolunteerService.approveVolunteer(id);
+      runInAction(() => {
+        this.setMessage('Заявка на волонтера успешно одобрена');
+        return response.data;
+      });
+    } catch (e) {
+      console.error('Ошибка одобрения заявки на волонтера:', e);
+      this.setMessage('Ошибка одобрения заявки на волонтера. Попробуйте еще раз.');
+    } finally {
+      runInAction(() => {
+        this.setLoading(false);
+      });
+    }
+  }
+
+  async rejectVolunteer(id: string) {
+    try {
+      this.setLoading(true);
+      const response = await VolunteerService.rejectVolunteer(id);
+      runInAction(() => {
+        this.setMessage('Заявка на волонтера успешно отклонена');
+        return response.data;
+      });
+    } catch (e) {
+      console.error('Ошибка отклонения заявки на волонтера:', e);
+      this.setMessage('Ошибка отклонения заявки на волонтера. Попробуйте еще раз.');
     } finally {
       runInAction(() => {
         this.setLoading(false);
@@ -388,7 +441,7 @@ class Store {
       this.setLoading(true);
       const response = await VolunteerService.updateVolunteerStatus(id, status);
       runInAction(() => {
-        this.setMessage("Статус волонтера успешно обновлен");
+        this.setMessage('Статус волонтера успешно обновлен');
         return response.data;
       });
     } catch (e) {
@@ -406,7 +459,7 @@ class Store {
       this.setLoading(true);
       const response = await VolunteerService.deleteVolunteer(id);
       runInAction(() => {
-        this.setMessage("Волонтер успешно удален");
+        this.setMessage('Волонтер успешно удален');
         return response.data;
       });
     } catch (e) {
@@ -418,6 +471,23 @@ class Store {
       });
     }
   }
+
+  async getVolunteers() {
+    try {
+      this.setLoading(true);
+      const response = await VolunteerService.getVolunteers();
+      return response.data;
+    } catch (e) {
+      console.error('Ошибка получения списка волонтеров:', e);
+      this.setMessage('Ошибка получения списка волонтеров. Попробуйте еще раз.');
+    } finally {
+      runInAction(() => {
+        this.setLoading(false);
+      });
+    }
+  }
+
+
 
   async fetchUserAdoptions(userId: string) {
     try {
@@ -444,6 +514,22 @@ class Store {
     } catch (e) {
       console.error('Ошибка усыновления животного:', e);
       this.setMessage('Ошибка усыновления животного. Попробуйте еще раз.');
+    } finally {
+      runInAction(() => {
+        this.setLoading(false);
+      });
+    }
+  }
+
+  async fetchUniqueSpecies() {
+    try {
+      this.setLoading(true);
+      const response = await AnimalService.getUniqueSpecies();
+      console.log(response.data.species);
+      return response.data.species;
+    } catch (e) {
+      console.error('Ошибка получения списка видов животных:', e);
+      this.setMessage('Ошибка получения списка видов животных. Попробуйте еще раз.');
     } finally {
       runInAction(() => {
         this.setLoading(false);

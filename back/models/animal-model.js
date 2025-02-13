@@ -13,7 +13,12 @@ const animalSchema = new mongoose.Schema({
     adoptedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     adoptionDate: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    updatedAt: { type: Date, default: Date.now },
+    adoptionRequest: {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        status: { type: String, enum: ['Ожидание', 'Принято', 'Отклонено'] },
+        createdAt: { type: Date }
+    }
 });
 
 

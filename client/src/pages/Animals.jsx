@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 
 const Animals = observer(() => {
   const [animals, setAnimals] = useState([]);
+  const [uniqueSpecies, setUniqueSpecies] = useState([]);
   const [filters, setFilters] = useState({
     species: "",
     age: "",
@@ -19,6 +20,8 @@ const Animals = observer(() => {
       try {
         const response = await store.fetchAnimals();
         setAnimals(response);
+        const species = await store.fetchUniqueSpecies();
+        setUniqueSpecies(species);
       } catch (error) {
         console.error("Ошибка загрузки животных:", error);
       }
@@ -73,9 +76,11 @@ const Animals = observer(() => {
             className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition"
           >
             <option value="">Все виды</option>
-            <option value="Собака">Собаки</option>
-            <option value="Кошка">Кошки</option>
-            <option value="Лев">Львы</option>
+            {uniqueSpecies.map((species) => (
+              <option key={species} value={species}>
+                {species}
+              </option>
+            ))}
           </select>
           <input
             type="number"

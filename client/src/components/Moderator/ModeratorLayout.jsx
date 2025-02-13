@@ -7,7 +7,7 @@ const ModeratorLayout = () => {
 
     return (
         <motion.div
-            style={{ height: 'calc(100vh - 96px)' }}
+            style={{ height: 'calc(100vh - 46px)' }}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -29,14 +29,14 @@ const ModeratorLayout = () => {
                                 Профиль
                             </Link>
                             <Link
-                                to="/moderator/manage-users"
+                                to="/moderator/volunteers"
                                 className={`flex items-center p-2 rounded-lg transition duration-300 ${location.pathname === "/moderator/manage-users"
                                     ? "bg-pink-50 text-pink-700"
                                     : "text-gray-600 hover:bg-pink-50 hover:text-pink-700"
                                     }`}
                             >
                                 <UsersIcon className="h-5 w-5 mr-2" />
-                                Управление пользователями
+                                Управление волонтерами
                             </Link>
                             <Link
                                 to="/moderator/manage-animals"
@@ -49,14 +49,14 @@ const ModeratorLayout = () => {
                                 Управление животными
                             </Link>
                             <Link
-                                to="/moderator/reports"
-                                className={`flex items-center p-2 rounded-lg transition duration-300 ${location.pathname === "/moderator/reports"
+                                to="/moderator/adoptions"
+                                className={`flex items-center p-2 rounded-lg transition duration-300 ${location.pathname === "/moderator/adoptions"
                                     ? "bg-pink-50 text-pink-700"
                                     : "text-gray-600 hover:bg-pink-50 hover:text-pink-700"
                                     }`}
                             >
                                 <ShieldCheckIcon className="h-5 w-5 mr-2" />
-                                Отчеты
+                                Модерация усыновлений
                             </Link>
                         </nav>
                     </div>

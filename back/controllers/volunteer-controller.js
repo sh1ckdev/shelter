@@ -1,37 +1,31 @@
-// controllers/volunteer-controller.js
-const VolunteerModel = require('../models/volunteer-model');
-const ApiError = require('../exceptions/api-error');
+const VolunteerService = require('../service/volunteer-service');
 
 class VolunteerController {
-    async getVolunteers(req, res, next) {
+    async applyForVolunteer(req, res, next) {
         try {
-            const volunteers = await VolunteerModel.find().populate('userId', 'username email');
-            return res.json(volunteers);
+            const { userId, tasks, schedule } = req.body;
+            const volunteerApplication = await VolunteerService.applyForVolunteer(userId, tasks, schedule);
+            return res.status(201).json(volunteerApplication);
         } catch (error) {
             next(error);
         }
     }
 
-    async registerVolunteer(req, res, next) {
+    async approveVolunteer(req, res, next) {
         try {
-            const { userId, tasks, schedule } = req.body;
+            const { id } = req.params;
+            const volunteerApplication = await VolunteerService.approveVolunteer(id);
+            return res.json(volunteerApplication);
+        } catch (error) {
+            next(error);
+        }
+    }
 
-            // Check if the volunteer already exists
-            const existingVolunteer = await VolunteerModel.findOne({ userId });
-            if (existingVolunteer) {
-                throw ApiError.BadRequest('Этот пользователь уже зарегистрирован как волонтер');
-            }
-
-            // Create a new volunteer entry
-            const volunteer = new VolunteerModel({
-                userId,
-                tasks,
-                schedule,
-            });
-
-            await volunteer.save();
-
-            return res.status(201).json(volunteer);
+    async rejectVolunteer(req, res, next) {
+        try {
+            const { id } = req.params;
+            const volunteerApplication = await VolunteerService.rejectVolunteer(id);
+            return res.json(volunteerApplication);
         } catch (error) {
             next(error);
         }
@@ -41,17 +35,7 @@ class VolunteerController {
         try {
             const { id } = req.params;
             const { status } = req.body;
-
-            const volunteer = await VolunteerModel.findByIdAndUpdate(
-                id,
-                { status },
-                { new: true }
-            );
-
-            if (!volunteer) {
-                throw ApiError.NotFound('Волонтер не найден');
-            }
-
+            const volunteer = await VolunteerService.updateVolunteerStatus(id, status);
             return res.json(volunteer);
         } catch (error) {
             next(error);
@@ -61,13 +45,27 @@ class VolunteerController {
     async deleteVolunteer(req, res, next) {
         try {
             const { id } = req.params;
-            const volunteer = await VolunteerModel.findByIdAndDelete(id);
+            const volunteer = await VolunteerService.deleteVolunteer(id);
+            return res.json({ message: 'Волонтер успешно удален', volunteer });
+        } catch (error) {
+            next(error);
+        }
+    }
 
-            if (!volunteer) {
-                throw ApiError.NotFound('Волонтер не найден');
-            }
+    async getVolunteers(req, res, next) {
+        try {
+            const volunteers = await VolunteerService.getVolunteers();
+            return res.json(volunteers);
+        } catch (error) {
+            next(error);
+        }
+    }
 
-            return res.json({ message: 'Волонтер успешно удален' });
+    async checkApplicationStatus(req, res, next) {
+        try {
+            const { userId } = req.params;
+            const status = await VolunteerService.checkApplicationStatus(userId);
+            return res.json(status);
         } catch (error) {
             next(error);
         }

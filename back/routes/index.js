@@ -21,7 +21,7 @@ router.get('/users', userController.getUsers)
 router.get('/user/:username', userController.getUser)
 
 router.put('/updateProfile/:userId', authMiddleware, userController.updateProfile)
-
+router.get('/animals/speciesFilter', animalController.getUniqueSpecies);
 router.get('/user/adoptions/:userId', authMiddleware, animalController.getUserAdoptions);
 router.get('/animals', animalController.getAnimals);
 router.get('/animals/filter', animalController.getAnimalsByFilters);
@@ -31,13 +31,17 @@ router.get('/animals/:id', animalController.getAnimalById);
 router.post('/animals', authMiddleware, moderatorMiddleware, animalController.createAnimal);
 router.put('/animals/:id', authMiddleware, moderatorMiddleware, animalController.updateAnimal);
 router.delete('/animals/:id', authMiddleware, moderatorMiddleware, animalController.deleteAnimal);
-
-
+router.post('/animals/:id/moderate', authMiddleware, moderatorMiddleware, animalController.moderateAdoption);
 router.post('/animals/:id/adopt', authMiddleware, animalController.adoptAnimal);
 
-router.post('/volunteers', authMiddleware, volunteerController.registerVolunteer);
+router.post('/volunteers/apply', authMiddleware, volunteerController.applyForVolunteer);
+
+router.patch('/volunteers/:id/approve', moderatorMiddleware, volunteerController.approveVolunteer);
+router.patch('/volunteers/:id/reject', moderatorMiddleware, volunteerController.rejectVolunteer);
 router.put('/volunteers/:id/status', moderatorMiddleware, volunteerController.updateVolunteerStatus);
 router.delete('/volunteers/:id', moderatorMiddleware, volunteerController.deleteVolunteer);
+router.get('/volunteers', volunteerController.getVolunteers);
+router.get('/volunteers/status/:userId', volunteerController.checkApplicationStatus);
 
 router.get('/news', newsController.getNews);
 router.post('/news', moderatorMiddleware, newsController.createNews);

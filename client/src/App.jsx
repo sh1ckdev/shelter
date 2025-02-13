@@ -21,6 +21,7 @@ import VolunteerManagement from "./components/Moderator/VolunteerManagement";
 import AnimalManagement from "./components/Moderator/AnimalManagement";
 import NewsManagement from "./components/Moderator/NewsManagement";
 import ModeratorProfile from "./components/Moderator/ModeratorProfile";
+import AdoptionModeration from "./components/Moderator/AdoptionModeration";
 
 function App() {
     useEffect(() => {
@@ -75,6 +76,7 @@ function App() {
                     <Route path="/moderator/volunteers" element={<VolunteerManagement />} />
                     <Route path="/moderator/manage-animals" element={<AnimalManagement />} />
                     <Route path="/moderator/news" element={<NewsManagement />} />
+                    <Route path="/moderator/adoptions" element={<AdoptionModeration />} />
                 </Route>
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>

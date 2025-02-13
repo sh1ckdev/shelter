@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { store } from "../../stores/store";
-import { PencilSquareIcon, UserIcon, AtSymbolIcon, ShieldCheckIcon, CalendarIcon } from "@heroicons/react/24/outline";
+import { PencilSquareIcon, UserIcon, AtSymbolIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import EditProfileModal from "../EditProfileModal";
 
@@ -63,31 +63,6 @@ const ModeratorProfile = observer(() => {
                     </div>
                 </div>
 
-                {/* Right Column: Activity Statistics */}
-                <div className="col-span-1 bg-white rounded-lg shadow-xl p-8 border border-gray-100 relative overflow-hidden">
-                    <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-40 h-40 bg-purple-200 rounded-lg blur-3xl opacity-50"></div>
-                    <div className="relative z-10">
-                        <h2 className="text-2xl font-bold text-gray-800 flex items-center mb-6">
-                            <ShieldCheckIcon className="h-6 w-6 mr-2 text-pink-500" />
-                            Ваша активность
-                        </h2>
-                        <div className="space-y-6">
-                            <div className="bg-gradient-to-r from-pink-100 to-purple-100 p-6 rounded-lg shadow-md">
-                                <p className="text-sm text-gray-600">Проверено отчетов</p>
-                                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600">
-                                    {/* {store.moderator.reportsChecked} */}
-                                </p>
-                            </div>
-                            <div className="bg-gradient-to-r from-pink-100 to-purple-100 p-6 rounded-lg shadow-md">
-                                <p className="text-sm text-gray-600">Последний вход</p>
-                                <p className="text-2xl font-bold text-pink-700 flex items-center">
-                                    <CalendarIcon className="h-5 w-5 mr-2" />
-                                    {/* {new Date(store.moderator.lastLogin).toLocaleDateString()} */}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {/* Modal for Editing Profile */}

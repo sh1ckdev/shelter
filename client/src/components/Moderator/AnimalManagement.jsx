@@ -79,17 +79,19 @@ const AnimalManagement = observer(() => {
       </button>
 
       {/* Список животных */}
-      {isLoading ? (
-        <div className="flex justify-center items-center h-32">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-        </div>
-      ) : (
-        <AnimalList
-          animals={animals}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      )}
+      <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+        {isLoading ? (
+          <div className="flex justify-center items-center h-32">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+          </div>
+        ) : (
+          <AnimalList
+            animals={animals}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        )}
+      </div>
 
       {/* Модальное окно */}
       <AnimalModal

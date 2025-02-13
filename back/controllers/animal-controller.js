@@ -106,14 +106,29 @@ class AnimalController {
             next(error);
         }
     }
+    async moderateAdoption(req, res, next) {
+        try {
+            const { id } = req.params;
+            const { approved } = req.body;
+            const animal = await AnimalService.moderateAdoption(id, approved);
+            return res.json({
+                message: approved ? "Усыновление одобрено" : "Усыновление отклонено",
+                animal
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 
     async adoptAnimal(req, res, next) {
         try {
             const { id } = req.params;
             const adoptedBy = req.user.id;
-
             const animal = await AnimalService.adoptAnimal(id, adoptedBy);
-            return res.json(animal);
+            return res.json({
+                message: "Заявка на усыновление отправлена",
+                animal
+            });
         } catch (error) {
             next(error);
         }
@@ -145,6 +160,18 @@ class AnimalController {
             const userId = req.params.userId;
             const stats = await AnimalService.getUserAdoptionStats(userId);
             return res.json(stats);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getUniqueSpecies(req, res, next) {
+        try {
+            const species = await AnimalService.getUniqueSpecies();
+            return res.json({
+                message: "Получены уникальные виды животных",
+                species
+            });
         } catch (error) {
             next(error);
         }
