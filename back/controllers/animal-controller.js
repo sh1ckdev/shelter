@@ -1,6 +1,7 @@
 // controllers/animal-controller.js
 const AnimalService = require('../service/animal-service');
 const upload = require('../middlewares/file-upload');
+const UserModel = require('../models/user-modal');
 
 class AnimalController {
     async createAnimal(req, res, next) {
@@ -174,6 +175,45 @@ class AnimalController {
             });
         } catch (error) {
             next(error);
+        }
+    }
+    async submitQuestionnaire(req, res, next) {
+        try {
+            const result = await AnimalService.submitQuestionnaire(req.user.id, req.body);
+            return res.json(result);
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    async moderateQuestionnaire(req, res, next) {
+        try {
+            console.log(req.body)
+            const { approved } = req.body;
+            const result = await AnimalService.moderateQuestionnaire(req.params.userId, approved);
+            return res.json(result);
+        } catch (e) {
+            next(e);
+        }
+    }
+    async getAdoptionReceipt(req, res, next) {
+        try {
+            const receipt = await AnimalService.getAdoptionReceipt(req.params.id);
+            return res.json(receipt);
+        } catch (e) {
+            next(e);
+        }
+    }
+    async getAllUsersWithQuestionnaires(req, res, next) {
+        try {
+            // Получаем всех пользователей с их анкетами
+            const users = await UserModel.find(
+                {}, // Фильтр (все пользователи)
+                'username email role hasCompletedQuestionnaire questionnaire' // Выбираем нужные поля
+            );
+            return res.json(users);
+        } catch (e) {
+            next(e);
         }
     }
 }

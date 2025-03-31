@@ -1,10 +1,11 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { UserIcon, HeartIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { UserIcon, HeartIcon, SparklesIcon, DocumentTextIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
+import {store} from '../stores/store'
 
 const ProfileLayout = () => {
     const location = useLocation();
-
+    console.log(store.user.questionnaire)
     return (
         <motion.div
             style={{ height: 'calc(100vh - 96px)' }}
@@ -38,6 +39,7 @@ const ProfileLayout = () => {
                                 <HeartIcon className="h-5 w-5 mr-2" />
                                 Усыновления
                             </Link>
+                            
                             <Link
                                 to="/animals"
                                 className={`flex items-center p-2 rounded-lg transition duration-300 ${location.pathname === "/profile/animals"
@@ -48,6 +50,19 @@ const ProfileLayout = () => {
                                 <SparklesIcon className="h-5 w-5 mr-2" />
                                 Животные
                             </Link>
+                            {!store.user?.hasCompletedQuestionnaire && (
+                <Link
+                  to="/profile/questionnaire"
+                  className={`flex items-center p-2 rounded-lg transition duration-300 ${
+                    location.pathname === '/profile/questionnaire'
+                      ? 'bg-pink-50 text-pink-700'
+                      : 'text-gray-600 hover:bg-pink-50 hover:text-pink-700'
+                  }`}
+                >
+                  <DocumentTextIcon className="h-5 w-5 mr-2" />
+                  Анкета
+                </Link>
+              )}
                         </nav>
                     </div>
 

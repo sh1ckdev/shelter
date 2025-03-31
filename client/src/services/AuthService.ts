@@ -42,4 +42,44 @@ export default class AuthService {
     );
     return response;
   }
+  static async getAllUsers() {
+    const response = await $api.get(
+      `${API_URL}/users/all`,
+      {
+        withCredentials: true
+      }
+    );
+    return response;
+  }
+  static async banUser(userId: string, isBanned: boolean) {
+    const response = await $api.put<UpdateUserResponse>(
+      `${API_URL}/users/${userId}/ban`,
+      {
+        isBanned
+      },
+      {
+        withCredentials: true
+      } 
+    );
+    return response;
+  }
+
+  static async deleteUser(userId: string) {
+    const response = await $api.delete<UpdateUserResponse>(
+      `${API_URL}/users/${userId}`,
+      {
+        withCredentials: true
+      }
+    );
+    return response;
+  }
+  static async getUsers() {
+    const response = await $api.get(
+      `${API_URL}/users`,
+      {
+        withCredentials: true
+      }
+    );
+    return response;
+  }
 }

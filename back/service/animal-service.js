@@ -1,6 +1,7 @@
 // services/animal-service.js
 const AnimalModel = require('../models/animal-model');
 const ApiError = require('../exceptions/api-error');
+const UserModel = require('../models/user-modal');
 
 class AnimalService {
     async createAnimal(name, species, breed, age, gender, description, imageUrl, addedBy) {
@@ -59,11 +60,29 @@ class AnimalService {
     }
 
     async adoptAnimal(id, adoptedBy) {
-        const animal = await AnimalModel.findByIdAndUpdate(
+        const user = await UserModel.findById(adoptedBy);
+        if (!user) {
+            throw ApiError.NotFound('Пользователь не найден');
+        }
+
+        if (!user.hasCompletedQuestionnaire) {
+            throw ApiError.BadRequest('Сначала необходимо пройти анкету');
+        }
+
+        const animal = await AnimalModel.findById(id);
+        if (!animal) {
+            throw ApiError.NotFound('Животное не найдено');
+        }
+
+        if (animal.status !== 'Доступен') {
+            throw ApiError.BadRequest('Животное недоступно для усыновления');
+        }
+
+        const updatedAnimal = await AnimalModel.findByIdAndUpdate(
             id,
             { 
                 status: 'Ожидание', 
-                adoptedBy,
+                adoptedBy: adoptedBy,
                 adoptionRequest: {
                     userId: adoptedBy,
                     status: 'Ожидание',
@@ -71,39 +90,70 @@ class AnimalService {
                 }
             },
             { new: true }
-        ).populate('adoptedBy', 'username'); 
-
-        if (!animal) {
-            throw ApiError.NotFound('Животное не найдено');
-        }
-
-        return animal;
-    }
-
-    async moderateAdoption(id, approved) {
-        const animal = await AnimalModel.findById(id);
-        
-        if (!animal) {
-            throw ApiError.NotFound('Животное не найдено');
-        }
-
-        const status = approved ? 'Усыновлен' : 'Доступен';
-        
-        const updatedAnimal = await AnimalModel.findByIdAndUpdate(
-            id,
-            { 
-                status,
-                adoptedBy: approved ? animal.adoptedBy : null,
-                adoptionDate: approved ? new Date() : null,
-                adoptionRequest: approved ? 
-                    { ...animal.adoptionRequest, status: 'Принято' } : 
-                    { ...animal.adoptionRequest, status: 'Отклонено' }
-            },
-            { new: true }
-        );
+        ).populate('adoptedBy', 'username');
 
         return updatedAnimal;
     }
+
+    async moderateAdoption(id, approved, moderatorId) {
+        const animal = await AnimalModel.findById(id).populate('adoptedBy');
+        
+        if (!animal) {
+          throw ApiError.NotFound('Животное не найдено');
+        }
+      
+        const user = await UserModel.findById(animal.adoptedBy);
+        if (!user || !user.hasCompletedQuestionnaire) {
+          throw ApiError.BadRequest('У пользователя нет одобренной анкеты');
+        }
+      
+        const status = approved ? 'Усыновлен' : 'Доступен';
+        
+        // Подготовка данных для квитанции
+        const receiptData = approved ? {
+          receiptId: `REC-${Date.now()}-${animal._id}`,
+          issuedAt: new Date(),
+          userId: animal.adoptedBy._id,
+          animalId: animal._id,
+          moderatorId: moderatorId,
+          adoptionDate: new Date(),
+          adoptionType: 'Полное',
+          conditions: {
+            sterilizationRequired: animal.sterilizationRequired || false,
+            regularCheckups: true,
+            cannotTransfer: true,
+            otherConditions: ['Ежемесячная отправка фотоотчётов']
+          },
+          shelterContact: {
+            name: "Приют 'Доброе сердце'",
+            phone: "+7 (123) 456-78-90",
+            email: "contact@dobroe-serdtse.ru"
+          },
+          status: 'Активен'
+        } : null;
+      
+        const updatedAnimal = await AnimalModel.findByIdAndUpdate(
+          id,
+          { 
+            status,
+            adoptedBy: approved ? animal.adoptedBy._id : null,
+            adoptionDate: approved ? new Date() : null,
+            adoptionRequest: {
+              ...animal.adoptionRequest,
+              status: approved ? 'Принято' : 'Отклонено',
+              moderatedAt: new Date(),
+              moderator: moderatorId
+            },
+            adoptionReceipt: receiptData
+          },
+          { new: true }
+        )
+        .populate('adoptedBy', 'username email phone')
+        .populate('adoptionReceipt.moderatorId', 'username');
+      
+      
+        return updatedAnimal;
+      }
     
     async getAnimalsByFilters(filters) {
         const query = {};
@@ -115,8 +165,8 @@ class AnimalService {
           }
 
         const animals = await AnimalModel.find(query)
-            .populate('addedBy', 'username')            
-            .populate('adoptedBy', 'username'); 
+            .populate('addedBy', 'username questionnaire')            
+            .populate('adoptedBy', 'username questionnaire'); 
         return animals;
     }
 
@@ -157,7 +207,101 @@ class AnimalService {
             throw error;
         }
     }
+    async getAdoptionReceipt(animalId) {
+        const animal = await AnimalModel.findById(animalId);
+        if (!animal || !animal.adoptionReceipt) {
+            throw ApiError.NotFound('Квитанция не найдена');
+        }
+        return animal.adoptionReceipt;
+    }
+    
+    async moderateQuestionnaire(userId, approved) {
+        const user = await UserModel.findById(userId);
+        if (!user) {
+            throw ApiError.NotFound('Пользователь не найден');
+        }
 
+        if (!user.questionnaire) {
+            throw ApiError.BadRequest('Анкета не найдена');
+        }
+
+        const updatedUser = await UserModel.findByIdAndUpdate(
+            userId,
+            {
+                questionnaire: {
+                    ...user.questionnaire,
+                    status: approved ? 'Принято' : 'Отклонено',
+                    moderatedAt: new Date()
+                },
+                hasCompletedQuestionnaire: approved
+            },
+            { new: true }
+        );
+
+        return { 
+            message: approved ? 
+                'Анкета одобрена, пользователь может усыновлять животных' : 
+                'Анкета отклонена'
+        };
+    }
+    async submitQuestionnaire(userId, questionnaireData) {
+        const user = await UserModel.findById(userId);
+        if (!user) {
+            throw ApiError.NotFound('Пользователь не найден');
+        }
+
+        if (user.hasCompletedQuestionnaire) {
+            throw ApiError.BadRequest('Анкета уже была пройдена ранее');
+        }
+
+        const updatedUser = await UserModel.findByIdAndUpdate(
+            userId,
+            {
+                questionnaire: {
+                    data: questionnaireData,
+                    status: 'Ожидание',
+                    submittedAt: new Date()
+                }
+            },
+            { new: true }
+        );
+
+        return { message: 'Анкета успешно отправлена на рассмотрение' };
+    }
+
+    async generateAdoptionContract(animal) {
+        const contractUrl = await generatePdfContract(animal);
+        await AnimalModel.findByIdAndUpdate(
+          animal._id,
+          { 'adoptionReceipt.contractUrl': contractUrl }
+        );
+        return contractUrl;
+      }
+      
+      async updateReceiptStatus(receiptId, newStatus) {
+        return AnimalModel.findOneAndUpdate(
+          { 'adoptionReceipt.receiptId': receiptId },
+          { 
+            'adoptionReceipt.status': newStatus,
+            $push: { 
+              'adoptionReceipt.updates': {
+                date: new Date(),
+                type: 'status_change',
+                description: `Статус изменён на ${newStatus}`,
+                changedBy: moderatorId
+              }
+            }
+          },
+          { new: true }
+        );
+      }
+      
+      async getAdoptionReceipt(receiptId) {
+        return AnimalModel.findOne(
+          { 'adoptionReceipt.receiptId': receiptId },
+          { adoptionReceipt: 1 }
+        ).populate('userId animalId moderatorId');
+      }
 }
 
 module.exports = new AnimalService();

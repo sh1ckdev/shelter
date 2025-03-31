@@ -6,4 +6,5 @@ export interface IUser {
     role: string;
     adoptionsCount: number;
     lastAdoptionDate: string;
+    questionnaire: object
   }

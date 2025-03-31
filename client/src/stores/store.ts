@@ -21,6 +21,7 @@ class Store {
   isLoading = false;
   message = '';
   adoptions: IAdoption[] = [];
+  users: IUser[] = [];
 
 
   constructor() {
@@ -38,6 +39,9 @@ class Store {
   }
   setUser(user: IUser) {
     this.user = user;
+  }
+  setUsers(users: IUser[]) {
+    this.users = users;
   }
   setMessage(message: string) {
     this.message = message;
@@ -76,7 +80,7 @@ class Store {
       this.setMessage("Вы успешно вошли");
     } catch (e) {
       console.error('Ошибка входа:', e);
-      this.setMessage('Ошибка входа. Попробуйте еще раз.');
+      this.setMessage('Ошибка. ' + e.response.data.message);
     } finally {
       runInAction(() => {
         this.setLoadingAuth(false);
@@ -224,6 +228,60 @@ class Store {
     }
   }
 
+  async submitQuestionnaire(questionnaireData: object) {
+    try {
+      this.setLoading(true);
+      const response = await AnimalService.submitQuestionnaire(questionnaireData);
+      runInAction(() => {
+        this.setMessage('Анкета успешно отправлена на рассмотрение');
+        return response.data;
+      });
+    } catch (e) {
+      console.error('Ошибка отправки анкеты:', e);
+      this.setMessage('Ошибка при отправке анкеты');
+    } finally {
+      runInAction(() => {
+        this.setLoading(false);
+      });
+    }
+  }
+
+  async moderateQuestionnaire(userId: string, approved: boolean) {
+    try {
+      this.setLoading(true);
+      const response = await AnimalService.moderateQuestionnaire(userId, approved);
+      runInAction(() => {
+        this.setMessage(approved ? 'Анкета одобрена' : 'Анкета отклонена');
+        return response.data;
+      });
+    } catch (e) {
+      console.error('Ошибка модерации анкеты:', e);
+      this.setMessage('Ошибка при модерации анкеты');
+    } finally {
+      runInAction(() => {
+        this.setLoading(false);
+      });
+    }
+  }
+
+  async getAdoptionReceipt(id: string) {
+    try {
+      this.setLoading(true);
+      const response = await AnimalService.getAdoptionReceipt(id);
+      runInAction(() => {
+        this.setMessage('Квитанция успешно получена');
+        return response.data;
+      });
+    } catch (e) {
+      console.error('Ошибка получения квитанции:', e);
+      this.setMessage('Ошибка при получении квитанции');
+    } finally {
+      runInAction(() => {
+        this.setLoading(false);
+      });
+    }
+  }
+
   async updateAnimal(id: string, animalData: object) {
     try {
       this.setLoading(true);
@@ -294,6 +352,54 @@ class Store {
       runInAction(() => {
         this.setLoading(false);
       });
+    }
+  }
+
+  async getUsers() {
+    try {
+      const response = await AuthService.getUsers();
+      this.setUsers(response.data);
+    } catch (error) {
+      console.error('Ошибка при получении пользователей:', error);
+      throw new Error('Не удалось получить пользователей');
+    }
+  }
+  
+
+  async fetchUsers() {
+    try {
+      this.setLoading(true);
+      const response = await AuthService.getAllUsers(); // Предполагаем, что такой метод есть в сервисе\
+      runInAction(() => {
+        this.setUsers(response.data);
+      });
+    } catch (e) {
+      console.error("Ошибка при загрузке пользователей:", e);
+      this.setMessage("Ошибка при загрузке пользователей");
+    } finally {
+      runInAction(() => {
+        this.setLoading(false);
+      });
+    }
+  }
+
+  async banUser(userId: string, isBanned: boolean) {
+    try {
+      const response = await AuthService.banUser(userId, isBanned);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при блокировке пользователя:', error);
+      throw new Error('Не удалось заблокировать пользователя');
+    }
+  }
+
+  async deleteUser(userId: string) {
+    try {
+      const response = await AuthService.deleteUser(userId);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при удалении пользователя:', error);
+      throw new Error('Не удалось удалить пользователя');
     }
   }
 

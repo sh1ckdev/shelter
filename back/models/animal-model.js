@@ -18,7 +18,94 @@ const animalSchema = new mongoose.Schema({
         userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         status: { type: String, enum: ['Ожидание', 'Принято', 'Отклонено'] },
         createdAt: { type: Date }
-    }
+    },
+    adoptionReceipt: {
+        // Основные данные
+        receiptId: { 
+          type: String,
+          required: true,
+          unique: true,
+          default: () => `REC-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+        },
+        issuedAt: { 
+          type: Date,
+          required: true,
+          default: Date.now
+        },
+        validUntil: {
+          type: Date,
+          required: true,
+          default: function() {
+            const date = new Date(this.issuedAt);
+            date.setFullYear(date.getFullYear() + 1); // Действителен 1 год
+            return date;
+          }
+        },
+        
+        // Участники процесса
+        userId: { 
+          type: mongoose.Schema.Types.ObjectId, 
+          ref: 'User',
+          required: true 
+        },
+        animalId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Animal',
+          required: true
+        },
+        moderatorId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          required: true
+        },
+        
+        // Информация об усыновлении
+        adoptionDate: {
+          type: Date,
+          required: true
+        },
+        adoptionType: {
+          type: String,
+          enum: ['Полное', 'Временное', 'Передержка'],
+          default: 'Полное'
+        },
+        conditions: {
+          sterilizationRequired: Boolean,
+          regularCheckups: Boolean,
+          cannotTransfer: Boolean,
+          otherConditions: [String]
+        },
+        
+        // Контактные данные
+        shelterContact: {
+          name: String,
+          phone: String,
+          email: String
+        },
+        
+        // Юридические аспекты
+        contractSigned: {
+          type: Boolean,
+          default: false
+        },
+        contractUrl: String,
+        
+        // Системная информация
+        status: {
+          type: String,
+          enum: ['Активен', 'Расторгнут', 'Истёк'],
+          default: 'Активен'
+        },
+        updates: [{
+          date: Date,
+          type: String,
+          description: String,
+          changedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+          }
+        }]
+      }
 });
 
 

@@ -22,6 +22,12 @@ import AnimalManagement from "./components/Moderator/AnimalManagement";
 import NewsManagement from "./components/Moderator/NewsManagement";
 import ModeratorProfile from "./components/Moderator/ModeratorProfile";
 import AdoptionModeration from "./components/Moderator/AdoptionModeration";
+import QuestionnaireForm from "./components/QuestionnaireForm"
+import AdoptedAnimalsModerator from "./components/Moderator/AdoptedAnimalsModerator";
+import UserQuestionnaires from "./components/Moderator/UserQuestionnaires";
+import BanPage from "./components/BanPage"
+import AdminUsersPage from "./components/Admin/AdminUsersPage";
+import AdminRoute from "./components/AdminRoute";
 
 function App() {
     useEffect(() => {
@@ -63,6 +69,7 @@ function App() {
                 >
                     <Route index element={<Profile />} />
                     <Route path="/profile/adoptions" element={<AdoptedAnimals />} />
+                    <Route path="/profile/questionnaire" element={<QuestionnaireForm />} />
                 </Route>
                 <Route
                     path="/moderator"
@@ -77,7 +84,19 @@ function App() {
                     <Route path="/moderator/manage-animals" element={<AnimalManagement />} />
                     <Route path="/moderator/news" element={<NewsManagement />} />
                     <Route path="/moderator/adoptions" element={<AdoptionModeration />} />
+                    <Route path="/moderator/adopted-animals" element={<AdoptedAnimalsModerator />} />
+                    <Route path="/moderator/user-questionnaires" element={<UserQuestionnaires />} />
                 </Route>
+                <Route
+                    path="/admin"
+                    element={
+                        <AdminRoute>
+                            <AdminUsersPage />
+                        </AdminRoute>
+                    }
+                >
+                </Route>
+                <Route path="/ban" element={<BanPage />} />
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </Router>

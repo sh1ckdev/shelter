@@ -7,14 +7,36 @@ const router = require('./routes/index')
 const errorMiddleware = require('./middlewares/error-middleware')
 const path = require('path');
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 const app = express();
 
 const staticPath = path.join(__dirname, 'static');
 app.use(express.static(staticPath));
 
+const getStatusColor = (statusCode) => {
+  if (statusCode < 200) return '\x1b[90m'; 
+  if (statusCode < 300) return '\x1b[32m'; 
+  if (statusCode < 400) return '\x1b[36m'; 
+  if (statusCode < 500) return '\x1b[33m'; 
+  return '\x1b[31m';
+};
+
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const statusColor = getStatusColor(res.statusCode);
+    const resetColor = '\x1b[0m';
+    console.log(
+      `[${new Date().toISOString()}] ${req.method} ${req.originalUrl} ${statusColor}${res.statusCode}${resetColor} ${duration}ms`
+    );
+  });
+  next();
+});
+
+
 app.use(cors({
-  origin: 'http://localhost:5175', 
+  origin: 'http://localhost:5173', 
   credentials: true, 
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', 
   optionsSuccessStatus: 204,
@@ -30,13 +52,35 @@ const start = async () => {
   try {
     await mongoose.connect(process.env.DB_URL);
     
-
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Сервер запущен на порте ${PORT}`);
     });
+
+    // Обработчики для корректного завершения
+    process.on('SIGINT', () => {
+      console.log('Получен SIGINT. Завершение работы...');
+      server.close(() => {
+        mongoose.connection.close(false, () => {
+          console.log('Сервер и подключение к MongoDB закрыты');
+          process.exit(0);
+        });
+      });
+    });
+
+    process.on('SIGTERM', () => {
+      console.log('Получен SIGTERM. Завершение работы...');
+      server.close(() => {
+        mongoose.connection.close(false, () => {
+          console.log('Сервер и подключение к MongoDB закрыты');
+          process.exit(0);
+        });
+      });
+    });
+
   } catch(e) {
-    console.log(e)
+    console.error(e);
+    process.exit(1);
   }
 }
 
-start()
+start();

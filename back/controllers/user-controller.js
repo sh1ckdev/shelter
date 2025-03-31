@@ -96,17 +96,17 @@ class UserController {
         }
     }
 
-    // async deleteUser(req, res, next) {
-    //     try {
-    //         const { userId } = req.params;
-    //         await userService.deleteUser(userId)
-    //         return res.json({
-    //             message: "Пользователь удален",
-    //         });
-    //     } catch (error) {
-            
-    //     }
-    // }
+    async deleteUser(req, res, next) {
+        try {
+            const { userId } = req.params;
+            await userService.deleteUser(userId)
+            return res.json({
+                message: "Пользователь удален",
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
     async getUser(req, res, next) {
         try {
             const { username } = req.params;
@@ -117,6 +117,26 @@ class UserController {
             }
     
             return res.json(user);
+        } catch (error) {
+            next(error);
+        }
+    }
+    async banUser(req, res, next) {
+        try {
+            const { userId } = req.params;
+            const { isBanned } = req.body;
+            await userService.banUser(userId, isBanned)
+            return res.json({
+                message: "Пользователь заблокирован",   
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+    async getUsers(req, res, next) {
+        try {
+            const users = await UserModel.find({});
+            res.json(users);
         } catch (error) {
             next(error);
         }

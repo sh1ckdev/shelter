@@ -1,9 +1,8 @@
-// components/ProtectedRoute.js
 import { observer } from "mobx-react-lite";
 import { store } from "../stores/store";
 import { Navigate } from "react-router-dom";
 
-const ProtectedRoute = observer(({ children }) => {
+const AdminRoute = observer(({ children }) => {
   if (store.isLoadingAuth) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
@@ -14,23 +13,11 @@ const ProtectedRoute = observer(({ children }) => {
       </div>
     );
   }
-  if (store.isAuth) {
-    if (store.user?.banned) {
-      return <Navigate to="/ban" replace />;
-    }
-  
-    if (store.isAdmin) {
-      return <Navigate to="/admin" replace />;
-    }
-  
-    if (store.isModerator) {
-      return <Navigate to="/moderator" replace />;
-    }
-  } else {
+  if (!store.isAuth || !store.isAdmin) {
     return <Navigate to="/login" replace />;
   }
 
   return children;
 });
 
-export default ProtectedRoute;
+export default AdminRoute;

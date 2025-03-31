@@ -17,8 +17,10 @@ router.post('/registration',
 router.post('/login', userController.login)
 router.get('/logout', userController.logout)
 router.get('/refresh', userController.refresh)
-router.get('/users', userController.getUsers)
+router.get('/users', authMiddleware, userController.getUsers);
 router.get('/user/:username', userController.getUser)
+router.delete('/users/:userId', authMiddleware, userController.deleteUser);
+router.put('/users/:userId/ban', authMiddleware, userController.banUser);
 
 router.put('/updateProfile/:userId', authMiddleware, userController.updateProfile)
 router.get('/animals/speciesFilter', animalController.getUniqueSpecies);
@@ -52,5 +54,10 @@ router.post('/feedback', feedbackController.createFeedback);
 router.get('/feedback',moderatorMiddleware, feedbackController.getFeedback);
 
 router.get('/user/adoptions/stats/:userId', authMiddleware, animalController.getUserAdoptionStats);
+
+router.post('/questionnaire', authMiddleware, animalController.submitQuestionnaire);
+router.post('/questionnaire/moderate/:userId', moderatorMiddleware, animalController.moderateQuestionnaire);
+router.get('/receipt/:id', authMiddleware, animalController.getAdoptionReceipt);
+router.get('/users/all', authMiddleware, animalController.getAllUsersWithQuestionnaires);
 
 module.exports = router

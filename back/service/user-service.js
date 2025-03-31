@@ -129,6 +129,16 @@ async refresh(refreshToken) {
 
         }
     }
+    async banUser(userId, isBanned) {
+        try {
+            const user = await UserModel.findById(userId);
+            console.log(isBanned)
+            user.banned = isBanned;
+            await user.save();
+        } catch(error) {
+            throw error;
+        }
+    }
 }
 
 module.exports = new UserService();

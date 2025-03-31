@@ -48,12 +48,27 @@ export default class AnimalService {
     return response.data;
   }
   static async moderateAdoption(id: string, approved: boolean) { 
-    const response = await $api.post<AnimalResponse>(`${API_URL}/animals/${id}/moderate`, { approved });
+    const response = await $api.post<AnimalResponse>(`${API_URL}/questionnaire/moderate/${id}`, { approved });
     return response;
   }
 
   static async getUniqueSpecies() {
     const response = await $api.get(`${API_URL}/animals/speciesFilter`);
+    return response;
+  }
+
+  static async submitQuestionnaire(questionnaireData: object) {
+    const response = await $api.post(`${API_URL}/questionnaire`, questionnaireData);
+    return response;
+  }
+
+  static async moderateQuestionnaire(userId: string, approved: boolean) {
+    const response = await $api.post(`${API_URL}/questionnaire/moderate/${userId}`, { approved });
+    return response;
+  }
+
+  static async getAdoptionReceipt(id: string) {
+    const response = await $api.get(`${API_URL}/animals/receipt/${id}`);
     return response;
   }
 }
