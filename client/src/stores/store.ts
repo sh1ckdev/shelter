@@ -228,11 +228,19 @@ class Store {
     }
   }
 
-  async submitQuestionnaire(questionnaireData: object) {
+  async submitQuestionnaire(questionnaireData) {
     try {
       this.setLoading(true);
       const response = await AnimalService.submitQuestionnaire(questionnaireData);
       runInAction(() => {
+        // Обновляем состояние пользователя в сторе
+        this.user = {
+          ...this.user,
+          questionnaire: {
+            status: 'Ожидание', // Устанавливаем статус "Ожидание"
+            data: questionnaireData, // Сохраняем данные анкеты
+          },
+        };
         this.setMessage('Анкета успешно отправлена на рассмотрение');
         return response.data;
       });
@@ -364,6 +372,7 @@ class Store {
       throw new Error('Не удалось получить пользователей');
     }
   }
+  
   
 
   async fetchUsers() {

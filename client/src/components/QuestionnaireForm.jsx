@@ -6,8 +6,9 @@ import { motion } from 'framer-motion';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 
 const QuestionnaireForm = observer(() => {
-  const [step, setStep] = useState(1); // Текущий шаг
-  const totalSteps = 3; // Общее количество шагов
+  const [step, setStep] = useState(1);
+  const totalSteps = 3;
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     hasPets: false,
@@ -45,6 +46,24 @@ const QuestionnaireForm = observer(() => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     await store.submitQuestionnaire(formData);
+    // Сбрасываем форму после отправки
+    setFormData({
+      hasPets: false,
+      petsDetails: '',
+      experience: '',
+      experienceYears: 0,
+      livingConditions: '',
+      hasYard: false,
+      availability: '',
+      dailyHours: 0,
+      familyMembers: 0,
+      hasChildren: false,
+      childrenAges: '',
+      allergies: false,
+      allergyDetails: '',
+      motivation: '',
+    });
+    setStep(1);
   };
 
   const renderStepIndicator = () => {
@@ -55,7 +74,7 @@ const QuestionnaireForm = observer(() => {
     ];
 
     return (
-      <ol className="flex items-center w-full p-3 space-x-2 text-sm font-medium text-center text-gray-500 bg-white border border-gray-200 rounded-lg shadow-xs sm:text-base sm:p-4 sm:space-x-4">
+      <ol className="flex mb-15 items-center w-full p-3 space-x-2 text-sm font-medium text-center text-gray-500 bg-white border border-gray-200 rounded-lg shadow-xs sm:text-base sm:p-4 sm:space-x-4">
         {steps.map((s, index) => (
           <li
             key={s.num}
@@ -297,14 +316,56 @@ const QuestionnaireForm = observer(() => {
   };
 
   const renderPendingMessage = () => (
-    <div className="flex items-center justify-center p-6 bg-green-50 border border-green-200 rounded-lg">
-      <CheckCircleIcon className="h-8 w-8 text-green-600 mr-4" />
-      <div>
-        <h3 className="text-lg font-semibold text-green-800">Анкета отправлена</h3>
-        <p className="text-green-700">Ваша анкета находится на стадии рассмотрения.</p>
+    <div className="flex flex-col items-center justify-center p-6 bg-green-50 border border-green-200 rounded-lg">
+      <CheckCircleIcon className="h-8 w-8 text-green-600 mb-4" />
+      <div className="text-center">
+        <h3 className="text-lg font-semibold text-green-800">Анкета подана</h3>
+        <p className="text-green-700 mb-4">Ваша анкета находится на стадии рассмотрения</p>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="py-2 px-4 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition duration-300"
+        >
+          Просмотреть анкету
+        </button>
       </div>
     </div>
   );
+
+  const renderModal = () => {
+    if (!isModalOpen || !store.user?.questionnaire?.data) return null;
+
+    const data = store.user.questionnaire.data;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto">
+          <h3 className="text-xl font-semibold mb-4">Данные вашей анкеты</h3>
+          <div className="space-y-4">
+            <p><strong>Есть питомцы:</strong> {data.hasPets ? 'Да' : 'Нет'}</p>
+            {data.hasPets && <p><strong>Подробности о питомцах:</strong> {data.petsDetails}</p>}
+            <p><strong>Опыт ухода:</strong> {data.experience}</p>
+            <p><strong>Годы опыта:</strong> {data.experienceYears}</p>
+            <p><strong>Жилищные условия:</strong> {data.livingConditions}</p>
+            <p><strong>Есть двор:</strong> {data.hasYard ? 'Да' : 'Нет'}</p>
+            <p><strong>Доступность:</strong> {data.availability}</p>
+            <p><strong>Часы в день:</strong> {data.dailyHours}</p>
+            <p><strong>Члены семьи:</strong> {data.familyMembers}</p>
+            <p><strong>Есть дети:</strong> {data.hasChildren ? 'Да' : 'Нет'}</p>
+            {data.hasChildren && <p><strong>Возраст детей:</strong> {data.childrenAges}</p>}
+            <p><strong>Аллергии:</strong> {data.allergies ? 'Да' : 'Нет'}</p>
+            {data.allergies && <p><strong>Подробности аллергий:</strong> {data.allergyDetails}</p>}
+            <p><strong>Мотивация:</strong> {data.motivation}</p>
+          </div>
+          <button
+            onClick={() => setIsModalOpen(false)}
+            className="mt-4 py-2 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-300"
+          >
+            Закрыть
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <motion.div
@@ -367,6 +428,7 @@ const QuestionnaireForm = observer(() => {
           </form>
         </>
       )}
+      {renderModal()}
     </motion.div>
   );
 });
