@@ -216,6 +216,7 @@ class AnimalService {
     }
     
     async moderateQuestionnaire(userId, approved) {
+        console.log(userId, approved);
         const user = await UserModel.findById(userId);
         if (!user) {
             throw ApiError.NotFound('Пользователь не найден');

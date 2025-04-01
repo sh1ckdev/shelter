@@ -8,6 +8,9 @@ const RegisterForm = observer(() => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [registrationError, setRegistrationError] = useState(''); // Добавлено для ошибок регистрации
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,15 +21,34 @@ const RegisterForm = observer(() => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await store.registration(username, email, password);
-    if (store.isAuth) {
-      navigate('/profile');
+    setRegistrationError('');
+    
+    if (password !== confirmPassword) {
+      setPasswordError('Пароли не совпадают');
+      return;
+    }
+    setPasswordError('');
+    
+    try {
+      await store.registration(username, email, password);
+      if (store.isAuth) {
+        navigate('/profile');
+      }
+    } catch (error) {
+      // Отображаем конкретное сообщение об ошибке
+      setRegistrationError(error.message || 'Произошла ошибка при регистрации');
     }
   };
 
+  // ... остальная часть JSX остается без изменений, убедитесь, что есть блок:
+  {registrationError && (
+    <p className="text-red-500 text-sm text-center">{registrationError}</p>
+  )}
+
+  
+
   return (
     <div className="bg-gradient-to-b from-pink-50 to-white flex items-center justify-center" style={{ height: 'calc(100vh - 96px)' }}>
-      {/* Abstract Background Illustration */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-pink-300 rounded-full blur-3xl opacity-50"></div>
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-purple-300 rounded-full blur-3xl opacity-50"></div>
 
@@ -79,6 +101,29 @@ const RegisterForm = observer(() => {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
+
+        {/* Confirm Password Field */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="confirmPassword">
+            Подтвердите пароль
+          </label>
+          <input
+            className="w-full bg-gray-50 text-gray-900 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            id="confirmPassword"
+            type="password"
+            placeholder="Повторите пароль"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+          {passwordError && (
+            <p className="text-red-500 text-sm mt-1">{passwordError}</p>
+          )}
+        </div>
+
+        {/* Registration Error Display */}
+        {registrationError && (
+          <p className="text-red-500 text-sm text-center">{registrationError}</p>
+        )}
 
         {/* Submit Button */}
         <button

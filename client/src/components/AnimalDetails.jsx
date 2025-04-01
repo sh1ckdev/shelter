@@ -55,7 +55,7 @@ const AnimalDetails = observer(() => {
   }
 
   // Проверка текущего пользователя на наличие анкеты
-  const currentUser = store.currentUser; // Предполагается, что store.currentUser содержит данные текущего пользователя
+  const currentUser = store.user; // Предполагается, что store.currentUser содержит данные текущего пользователя
   const hasCompletedQuestionnaire = currentUser?.hasCompletedQuestionnaire === true;
 
   return (

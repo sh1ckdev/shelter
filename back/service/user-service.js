@@ -6,10 +6,17 @@ const ApiError = require('../exceptions/api-error');
 
 class UserService {
     async registration(username, email, password, role = 'user') {
-        const candidate = await UserModel.findOne({ username, email });
-        if (candidate) {
-            throw ApiError.BadRequest('Пользователь уже существует');
+        // Проверяем отдельно username и email
+        const usernameCandidate = await UserModel.findOne({ username });
+        if (usernameCandidate) {
+            throw ApiError.BadRequest('Пользователь с таким именем уже существует');
         }
+        
+        const emailCandidate = await UserModel.findOne({ email });
+        if (emailCandidate) {
+            throw ApiError.BadRequest('Email уже используется');
+        }
+
         const hashedPassword = await bcrypt.hash(password, 3);
         const user = await UserModel.create({ username, email, password: hashedPassword, role });
     
@@ -77,13 +84,25 @@ async refresh(refreshToken) {
                 throw ApiError.NotFound('Пользователь не найден');
             }
     
-            const { username, password, email } = fieldsToUpdate;
+            const { username, password, email, oldPassword, newPassword } = fieldsToUpdate;
             const updatedFields = {
                 username: (username && username.trim()) || currentUser.username,
                 email: (email && email.trim()) || currentUser.email,
-                password: (password && password.trim()) || currentUser.password,
             };
             
+            // Проверка старого пароля при смене пароля
+            if (newPassword) {
+                if (!oldPassword) {
+                    throw ApiError.BadRequest('Необходимо ввести текущий пароль');
+                }
+                
+                const isPassEquals = await bcrypt.compare(oldPassword, currentUser.password);
+                if (!isPassEquals) {
+                    throw ApiError.BadRequest('Неверный текущий пароль');
+                }
+                
+                updatedFields.password = await bcrypt.hash(newPassword, 3);
+            }
 
             const newUsername = updatedFields.username;
     
@@ -93,11 +112,6 @@ async refresh(refreshToken) {
                 if (existingUser) {
                     throw ApiError.BadRequest('Никнейм уже используется');
                 }
-            }
-
-            if (password) {
-                const hashedPassword = await bcrypt.hash(password, 3); 
-                updatedFields.password = hashedPassword;
             }
     
             Object.assign(currentUser, updatedFields);
@@ -136,6 +150,37 @@ async refresh(refreshToken) {
             user.banned = isBanned;
             await user.save();
         } catch(error) {
+            throw error;
+        }
+    }
+
+    async createUser(username, email, password, role = 'user') {
+        try {
+            const candidate = await UserModel.findOne({ $or: [{ username }, { email }] });
+            if (candidate) {
+                throw ApiError.BadRequest('Пользователь с таким никнеймом или email уже существует');
+            }
+            const hashedPassword = await bcrypt.hash(password, 3);
+            const user = await UserModel.create({ username, email, password: hashedPassword, role });
+            return user;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async updateUserRole(userId, newRole) {
+        try {
+            const user = await UserModel.findById(userId);
+            if (!user) {
+                throw ApiError.NotFound('Пользователь не найден');
+            }
+            if (!['user', 'moderator', 'admin'].includes(newRole)) {
+                throw ApiError.BadRequest('Недопустимая роль');
+            }
+            user.role = newRole;
+            await user.save();
+            return user;
+        } catch (error) {
             throw error;
         }
     }

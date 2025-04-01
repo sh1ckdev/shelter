@@ -15,6 +15,7 @@ const ProtectedRoute = observer(({ children }) => {
     );
   }
   if (store.isAuth) {
+    console.log(store.user);
     if (store.user?.banned) {
       return <Navigate to="/ban" replace />;
     }

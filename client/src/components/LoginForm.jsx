@@ -7,6 +7,7 @@ import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 const LoginForm = observer(() => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState({ username: '', password: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,21 +21,33 @@ const LoginForm = observer(() => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await store.login(username, password);
-    if (store.isAuth) {
-      navigate('/profile');
-    }
-    if (store.isModerator) {
-      navigate('/moderator');
+    setErrors({ username: '', password: '' }); // Сброс ошибок перед новой попыткой
+
+    try {
+      await store.login(username, password);
+      if (store.isAuth) {
+        if (store.isAdmin) {
+          navigate('/admin');
+        }
+        if (store.isModerator) {
+          navigate('/moderator');
+        }
+        navigate('/profile');
+      }
+    } catch (error) {
+      if (error.response) {
+        const errorMessage = error.response.data.message;
+        if (errorMessage.includes('никнейм')) {
+          setErrors(prev => ({ ...prev, username: 'Пользователь с таким никнеймом не найден' }));
+        } else if (errorMessage.includes('пароль')) {
+          setErrors(prev => ({ ...prev, password: 'Неверный пароль' }));
+        }
+      }
     }
   };
 
-
   return (
     <div className="bg-gradient-to-b from-pink-50 to-white flex items-center justify-center" style={{ height: 'calc(100vh - 96px)' }}>
-
-
-
       <form onSubmit={handleSubmit} className="relative z-10 bg-white p-8 rounded-3xl shadow-xl max-w-md w-full space-y-6">
         <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600">
           Вход
@@ -46,13 +59,18 @@ const LoginForm = observer(() => {
             Имя пользователя
           </label>
           <input
-            className="w-full bg-gray-50 text-gray-900 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            className={`w-full bg-gray-50 text-gray-900 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 ${
+              errors.username ? 'ring-2 ring-red-500' : 'focus:ring-pink-500'
+            }`}
             id="username"
             type="text"
             placeholder="Введите имя пользователя"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
+          {errors.username && (
+            <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+          )}
         </div>
 
         {/* Password Field */}
@@ -61,13 +79,18 @@ const LoginForm = observer(() => {
             Пароль
           </label>
           <input
-            className="w-full bg-gray-50 text-gray-900 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            className={`w-full bg-gray-50 text-gray-900 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 ${
+              errors.password ? 'ring-2 ring-red-500' : 'focus:ring-pink-500'
+            }`}
             id="password"
             type="password"
             placeholder="Введите пароль"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          {errors.password && (
+            <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+          )}
         </div>
 
         {/* Submit Button */}

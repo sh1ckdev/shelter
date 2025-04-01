@@ -14,15 +14,19 @@ export default class AuthService {
   }
 
   static async registration(username: string, email: string, password: string) {
-    console.log(username, email, password);
-    const response = await $api.post<AuthResponse>(`${API_URL}/registration`, {
-      username,
-      email,
-      password,
-    }, {
-      withCredentials: true
-    });
-    return response;
+    try {
+      const response = await $api.post<AuthResponse>(`${API_URL}/registration`, {
+        username,
+        email,
+        password,
+      }, {
+        withCredentials: true
+      });
+      return response;
+    } catch (error) {
+      // Передаем ошибку дальше с сохранением данных от сервера
+      throw error;
+    }
   }
 
   static async logout() {
@@ -76,6 +80,28 @@ export default class AuthService {
   static async getUsers() {
     const response = await $api.get(
       `${API_URL}/users`,
+      {
+        withCredentials: true
+      }
+    );
+    return response;
+  }
+
+  static async createUser(userData: object) {
+    const response = await $api.post(
+      `${API_URL}/users/create`,
+      userData,
+      {
+        withCredentials: true
+      }
+    );
+    return response;
+  }
+
+  static async updateUserRole(userId: string, role: string) {
+    const response = await $api.put(
+      `${API_URL}/users/${userId}/role`,
+      { role },
       {
         withCredentials: true
       }

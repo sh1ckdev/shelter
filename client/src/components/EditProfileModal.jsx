@@ -7,25 +7,49 @@ import { observer } from "mobx-react-lite";
 const EditProfileModal = observer(({ isOpen, onClose, onSave }) => {
     const [username, setUsername] = useState(store.user.username || "");
     const [email, setEmail] = useState(store.user.email || "");
-    const [password, setPassword] = useState("");
+    const [oldPassword, setOldPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [error, setError] = useState("");
+    const [errors, setErrors] = useState({
+        username: '',
+        email: '',
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
     const [isClosing, setIsClosing] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
             setUsername(store.user.username || "");
             setEmail(store.user.email || "");
-            setPassword("");
+            setOldPassword("");
+            setNewPassword("");
             setConfirmPassword("");
-            setError("");
+            setErrors({
+                username: '',
+                email: '',
+                oldPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+            });
             setIsClosing(false);
         }
     }, [isOpen]);
 
     const handleSave = async () => {
-        if (password !== confirmPassword) {
-            setError("Пароли не совпадают");
+        // Сброс ошибок
+        setErrors({
+            username: '',
+            email: '',
+            oldPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+        });
+
+        // Проверка паролей
+        if (newPassword && newPassword !== confirmPassword) {
+            setErrors(prev => ({ ...prev, confirmPassword: 'Пароли не совпадают' }));
             return;
         }
 
@@ -37,16 +61,31 @@ const EditProfileModal = observer(({ isOpen, onClose, onSave }) => {
         if (email !== store.user.email) {
             fieldsToUpdate.email = email;
         }
-        if (password) {
-            fieldsToUpdate.password = password;
+        if (newPassword) {
+            if (!oldPassword) {
+                setErrors(prev => ({ ...prev, oldPassword: 'Введите текущий пароль' }));
+                return;
+            }
+            fieldsToUpdate.oldPassword = oldPassword;
+            fieldsToUpdate.newPassword = newPassword;
         }
 
         try {
             await onSave(fieldsToUpdate);
             handleClose();
         } catch (error) {
-            setError("Ошибка при обновлении профиля");
-            console.error(error);
+            if (error.response) {
+                const errorMessage = error.response.data.message;
+                if (errorMessage.includes('пароль')) {
+                    setErrors(prev => ({ ...prev, oldPassword: 'Неверный текущий пароль' }));
+                } else if (errorMessage.includes('никнейм')) {
+                    setErrors(prev => ({ ...prev, username: 'Этот никнейм уже занят' }));
+                } else if (errorMessage.includes('email')) {
+                    setErrors(prev => ({ ...prev, email: 'Этот email уже занят' }));
+                }
+            } else {
+                setErrors(prev => ({ ...prev, general: 'Ошибка при обновлении профиля' }));
+            }
         }
     };
 
@@ -89,9 +128,14 @@ const EditProfileModal = observer(({ isOpen, onClose, onSave }) => {
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                                errors.username ? 'border-red-500 ring-red-500' : 'border-gray-300 focus:ring-pink-500 focus:border-transparent'
+                            }`}
                             placeholder="Введите новое имя"
                         />
+                        {errors.username && (
+                            <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+                        )}
                     </div>
 
                     {/* Поле для email */}
@@ -103,43 +147,77 @@ const EditProfileModal = observer(({ isOpen, onClose, onSave }) => {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                                errors.email ? 'border-red-500 ring-red-500' : 'border-gray-300 focus:ring-pink-500 focus:border-transparent'
+                            }`}
                             placeholder="Введите новый email"
                         />
+                        {errors.email && (
+                            <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                        )}
                     </div>
 
-                    {/* Поле для пароля */}
+                    {/* Поле для старого пароля */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Текущий пароль
+                        </label>
+                        <input
+                            type="password"
+                            value={oldPassword}
+                            onChange={(e) => setOldPassword(e.target.value)}
+                            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                                errors.oldPassword ? 'border-red-500 ring-red-500' : 'border-gray-300 focus:ring-pink-500 focus:border-transparent'
+                            }`}
+                            placeholder="Введите текущий пароль"
+                        />
+                        {errors.oldPassword && (
+                            <p className="text-red-500 text-sm mt-1">{errors.oldPassword}</p>
+                        )}
+                    </div>
+
+                    {/* Поле для нового пароля */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Новый пароль
                         </label>
                         <input
                             type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                                errors.newPassword ? 'border-red-500 ring-red-500' : 'border-gray-300 focus:ring-pink-500 focus:border-transparent'
+                            }`}
                             placeholder="Введите новый пароль"
                         />
+                        {errors.newPassword && (
+                            <p className="text-red-500 text-sm mt-1">{errors.newPassword}</p>
+                        )}
                     </div>
 
-                    {/* Поле для подтверждения пароля */}
+                    {/* Поле для подтверждения нового пароля */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Подтвердите пароль
+                            Подтвердите новый пароль
                         </label>
                         <input
                             type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                                errors.confirmPassword ? 'border-red-500 ring-red-500' : 'border-gray-300 focus:ring-pink-500 focus:border-transparent'
+                            }`}
                             placeholder="Повторите новый пароль"
                         />
+                        {errors.confirmPassword && (
+                            <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
+                        )}
                     </div>
 
                     {/* Сообщение об ошибке */}
-                    {error && (
+                    {errors.general && (
                         <div className="mb-4 text-sm text-red-500 text-center">
-                            {error}
+                            {errors.general}
                         </div>
                     )}
 

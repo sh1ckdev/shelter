@@ -141,6 +141,31 @@ class UserController {
             next(error);
         }
     }
+    async createUser(req, res, next) {
+        try {
+            const { username, email, password, role } = req.body;
+            const user = await UserService.createUser(username, email, password, role);
+            return res.json({
+                message: "Пользователь успешно создан",
+                user: user
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+    async updateUserRole(req, res, next) {
+        try {
+            const { userId } = req.params;
+            const { role } = req.body;
+            const user = await UserService.updateUserRole(userId, role);
+            return res.json({
+                message: "Роль пользователя успешно обновлена",
+                user: user
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new UserController();

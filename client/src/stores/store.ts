@@ -98,7 +98,14 @@ class Store {
       this.setMessage("Успешная регистрация");
     } catch (e) {
       console.error('Ошибка регистрации:', e);
-      this.setMessage('Ошибка регистрации. Попробуйте еще раз.');
+      // Более точная обработка ошибок
+      if (e.response?.data?.message === 'Пользователь уже существует') {
+        throw new Error('Пользователь с таким именем или email уже существует');
+      } else if (e.response?.data?.message) {
+        throw new Error(e.response.data.message);
+      } else {
+        throw new Error('Ошибка регистрации. Попробуйте еще раз.');
+      }
     } finally {
       runInAction(() => {
         this.setLoadingAuth(false);
@@ -151,8 +158,7 @@ class Store {
       return response.data;
     } catch (error) {
       console.error('Ошибка обновления профиля:', error);
-      this.setMessage('Ошибка обновления профиля. Попробуйте еще раз.');
-      throw new Error('Не удалось обновить профиль');
+      throw error; // Пробрасываем ошибку для обработки в компоненте
     }
   }
 
@@ -257,6 +263,7 @@ class Store {
   async moderateQuestionnaire(userId: string, approved: boolean) {
     try {
       this.setLoading(true);
+      console.log(userId, approved);
       const response = await AnimalService.moderateQuestionnaire(userId, approved);
       runInAction(() => {
         this.setMessage(approved ? 'Анкета одобрена' : 'Анкета отклонена');
@@ -649,6 +656,26 @@ class Store {
       runInAction(() => {
         this.setLoading(false);
       });
+    }
+  }
+
+  async createUser(userData: object) {
+    try {
+      const response = await AuthService.createUser(userData);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка создания пользователя:', error);
+      throw error;
+    }
+  }
+
+  async updateUserRole(userId: string, role: string) {
+    try {
+      const response = await AuthService.updateUserRole(userId, role);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка обновления роли пользователя:', error);
+      throw error;
     }
   }
 }

@@ -48,7 +48,7 @@ export default class AnimalService {
     return response.data;
   }
   static async moderateAdoption(id: string, approved: boolean) { 
-    const response = await $api.post<AnimalResponse>(`${API_URL}/questionnaire/moderate/${id}`, { approved });
+    const response = await $api.post<AnimalResponse>(`${API_URL}/animals/${id}/moderate`, { approved });
     return response;
   }
 

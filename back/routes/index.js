@@ -21,6 +21,7 @@ router.get('/users', authMiddleware, userController.getUsers);
 router.get('/user/:username', userController.getUser)
 router.delete('/users/:userId', authMiddleware, userController.deleteUser);
 router.put('/users/:userId/ban', authMiddleware, userController.banUser);
+router.put('/users/:userId/role', authMiddleware, userController.updateUserRole);
 
 router.put('/updateProfile/:userId', authMiddleware, userController.updateProfile)
 router.get('/animals/speciesFilter', animalController.getUniqueSpecies);

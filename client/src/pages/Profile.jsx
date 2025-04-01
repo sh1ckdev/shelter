@@ -18,6 +18,10 @@ const Profile = observer(() => {
         return roleTranslations[role] || role;
     };
 
+    if (store.isAdmin) {
+        return <Navigate to="/admin" replace />;
+    }
+
     if (store.isModerator) {
         return <Navigate to="/moderator" replace />;
     }
