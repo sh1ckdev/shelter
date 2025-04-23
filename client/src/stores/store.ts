@@ -22,6 +22,7 @@ class Store {
   message = '';
   adoptions: IAdoption[] = [];
   users: IUser[] = [];
+  news = [];
 
 
   constructor() {
@@ -46,6 +47,9 @@ class Store {
   setMessage(message: string) {
     this.message = message;
   }
+  setNews = (news) => {
+    this.news = news;
+  };
   setLoading(bool: boolean) {
     this.isLoading = bool;
   }
@@ -420,17 +424,17 @@ class Store {
   }
 
   // Методы для работы с новостями
-  async fetchNews() {
+  async fetchAllNews(isEvent = false) {
     try {
       this.setLoading(true);
-      const response = await NewsService.getNews();
+      const response = await NewsService.getAllNews(isEvent);
       runInAction(() => {
+        this.setNews(response.data);
         this.setMessage("Новости успешно загружены");
-        return response.data;
       });
     } catch (e) {
-      console.error('Ошибка загрузки новостей:', e);
-      this.setMessage('Ошибка загрузки новостей. Попробуйте еще раз.');
+      console.error("Ошибка загрузки новостей:", e);
+      this.setMessage("Ошибка загрузки новостей. Попробуйте еще раз.");
     } finally {
       runInAction(() => {
         this.setLoading(false);
@@ -438,17 +442,36 @@ class Store {
     }
   }
 
-  async createNews(newsData: object) {
+  async fetchNewsById(id) {
+    try {
+      this.setLoading(true);
+      const response = await NewsService.getNewsById(id);
+      runInAction(() => {
+        this.setMessage("Новость успешно загружена");
+        return response.data;
+      });
+    } catch (e) {
+      console.error("Ошибка загрузки новости:", e);
+      this.setMessage("Ошибка загрузки новости. Попробуйте еще раз.");
+    } finally {
+      runInAction(() => {
+        this.setLoading(false);
+      });
+    }
+  }
+
+  async createNews(newsData) {
     try {
       this.setLoading(true);
       const response = await NewsService.createNews(newsData);
       runInAction(() => {
         this.setMessage("Новость успешно создана");
+        this.fetchAllNews(); // Обновляем список новостей
         return response.data;
       });
     } catch (e) {
-      console.error('Ошибка создания новости:', e);
-      this.setMessage('Ошибка создания новости. Попробуйте еще раз.');
+      console.error("Ошибка создания новости:", e);
+      this.setMessage("Ошибка создания новости. Попробуйте еще раз.");
     } finally {
       runInAction(() => {
         this.setLoading(false);
@@ -456,17 +479,18 @@ class Store {
     }
   }
 
-  async updateNews(id: string, newsData: object) {
+  async updateNews(id, newsData) {
     try {
       this.setLoading(true);
       const response = await NewsService.updateNews(id, newsData);
       runInAction(() => {
         this.setMessage("Новость успешно обновлена");
+        this.fetchAllNews(); // Обновляем список новостей
         return response.data;
       });
     } catch (e) {
-      console.error('Ошибка обновления новости:', e);
-      this.setMessage('Ошибка обновления новости. Попробуйте еще раз.');
+      console.error("Ошибка обновления новости:", e);
+      this.setMessage("Ошибка обновления новости. Попробуйте еще раз.");
     } finally {
       runInAction(() => {
         this.setLoading(false);
@@ -474,17 +498,18 @@ class Store {
     }
   }
 
-  async deleteNews(id: string) {
+  async deleteNews(id) {
     try {
       this.setLoading(true);
       const response = await NewsService.deleteNews(id);
       runInAction(() => {
         this.setMessage("Новость успешно удалена");
+        this.fetchAllNews(); // Обновляем список новостей
         return response.data;
       });
     } catch (e) {
-      console.error('Ошибка удаления новости:', e);
-      this.setMessage('Ошибка удаления новости. Попробуйте еще раз.');
+      console.error("Ошибка удаления новости:", e);
+      this.setMessage("Ошибка удаления новости. Попробуйте еще раз.");
     } finally {
       runInAction(() => {
         this.setLoading(false);

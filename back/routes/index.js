@@ -6,8 +6,8 @@ const authMiddleware = require('../middlewares/authMiddleware')
 const animalController = require ('../controllers/animal-controller')
 const moderatorMiddleware = require('../middlewares/moderatorMiddleware')
 const volunteerController = require('../controllers/volunteer-controller')
-const newsController = require('../controllers/news-controller')
 const feedbackController = require('../controllers/feedback-controller')
+const newsController = require('../controllers/news.controller');
 
 
 router.post('/registration', 
@@ -46,10 +46,13 @@ router.delete('/volunteers/:id', moderatorMiddleware, volunteerController.delete
 router.get('/volunteers', volunteerController.getVolunteers);
 router.get('/volunteers/status/:userId', volunteerController.checkApplicationStatus);
 
-router.get('/news', newsController.getNews);
-router.post('/news', moderatorMiddleware, newsController.createNews);
-router.put('/news/:id', moderatorMiddleware, newsController.updateNews);
-router.delete('/news/:id', moderatorMiddleware, newsController.deleteNews);
+router.get('/news', newsController.getAll);
+router.get('/news/:id', newsController.getOne);
+
+// Защищенные роуты (только для админа)
+router.post('/news', authMiddleware, newsController.create);
+router.put('/news/:id', authMiddleware, newsController.update);
+router.delete('/news/:id', authMiddleware, newsController.delete);
 
 router.post('/feedback', feedbackController.createFeedback);
 router.get('/feedback',moderatorMiddleware, feedbackController.getFeedback);

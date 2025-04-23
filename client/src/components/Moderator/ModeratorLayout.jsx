@@ -83,6 +83,19 @@ const ModeratorLayout = () => {
                                 <HeartIcon className="h-5 w-5 mr-2" />
                                 Анкетные заявки
                             </Link>
+                            <Link
+                                to="/moderator/news"
+                                className={`flex items-center p-2 rounded-lg transition duration-300 ${
+                                    location.pathname === "/moderator/news"
+                                        ? "bg-pink-50 text-pink-700" 
+                                        : "text-gray-600 hover:bg-pink-50 hover:text-pink-700"
+                                }`}
+                            >
+                                <HeartIcon className="h-5 w-5 mr-2" />
+                                Новости
+                            </Link>
+                            
+
                         </nav>
                     </div>
 

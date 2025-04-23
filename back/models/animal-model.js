@@ -11,7 +11,7 @@ const animalSchema = new mongoose.Schema({
     status: { type: String, enum: ['Доступен', 'Усыновлен', 'Ожидание'], default: 'Доступен' },
     addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     adoptedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    adoptionDate: { type: Date, default: Date.now },
+    adoptionDate: { type: Date },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
     adoptionRequest: {
@@ -23,19 +23,17 @@ const animalSchema = new mongoose.Schema({
         // Основные данные
         receiptId: { 
           type: String,
-          required: true,
           unique: true,
           default: () => `REC-${Date.now()}-${Math.floor(Math.random() * 1000)}`
         },
         issuedAt: { 
           type: Date,
-          required: true,
           default: Date.now
         },
         validUntil: {
           type: Date,
-          required: true,
           default: function() {
+            if (!this.issuedAt) return null;
             const date = new Date(this.issuedAt);
             date.setFullYear(date.getFullYear() + 1); // Действителен 1 год
             return date;
@@ -45,24 +43,20 @@ const animalSchema = new mongoose.Schema({
         // Участники процесса
         userId: { 
           type: mongoose.Schema.Types.ObjectId, 
-          ref: 'User',
-          required: true 
+          ref: 'User'
         },
         animalId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: 'Animal',
-          required: true
+          ref: 'Animal'
         },
         moderatorId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-          required: true
+          ref: 'User'
         },
         
         // Информация об усыновлении
         adoptionDate: {
-          type: Date,
-          required: true
+          type: Date
         },
         adoptionType: {
           type: String,
@@ -107,7 +101,6 @@ const animalSchema = new mongoose.Schema({
         }]
       }
 });
-
 
 const AnimalModel = mongoose.model('Animal', animalSchema);
 

@@ -28,6 +28,7 @@ import UserQuestionnaires from "./components/Moderator/UserQuestionnaires";
 import BanPage from "./components/BanPage"
 import AdminUsersPage from "./components/Admin/AdminUsersPage";
 import AdminRoute from "./components/AdminRoute";
+import NewsPage from "./pages/NewsPage";
 
 function App() {
     useEffect(() => {
@@ -42,6 +43,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/animals" element={<Animals />} />
                 <Route path="/animals/:id" element={<AnimalDetails />} />
+                <Route path="/news" element={<NewsPage />} />
 
                 <Route
                     path="/login"

@@ -6,7 +6,7 @@ const cors = require("cors");
 const router = require('./routes/index')
 const errorMiddleware = require('./middlewares/error-middleware')
 const path = require('path');
-
+const newsRouter = require('./routes/news.routes')
 const PORT = process.env.PORT;
 const app = express();
 
@@ -46,6 +46,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use('/api', router)
+app.use('/news', newsRouter)
 app.use(errorMiddleware)
 
 const start = async () => {
