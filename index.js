@@ -10,6 +10,26 @@ const newsRouter = require('./routes/news.routes')
 const PORT = process.env.PORT;
 const app = express();
 
+const parseOrigins = (value = '') =>
+  value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const defaultOrigins = [
+  'http://localhost:5173',
+  'http://localhost:4173',
+  'http://localhost:8080',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:4173',
+  'http://127.0.0.1:8080',
+];
+
+const allowedOrigins = [
+  ...defaultOrigins,
+  ...parseOrigins(process.env.CLIENT_ORIGIN),
+].filter((value, index, array) => array.indexOf(value) === index);
+
 const staticPath = path.join(__dirname, 'static');
 app.use(express.static(staticPath));
 
@@ -35,12 +55,26 @@ app.use((req, res, next) => {
 });
 
 
-app.use(cors({
-  origin: 'http://localhost:5173', 
-  credentials: true, 
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', 
-  optionsSuccessStatus: 204,
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error(`Origin ${origin} is not allowed by CORS configuration.`)
+      );
+    },
+    credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    optionsSuccessStatus: 204,
+  })
+);
 
 app.use(express.json());
 app.use(cookieParser());
