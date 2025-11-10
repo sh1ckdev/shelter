@@ -2,32 +2,25 @@
 FROM node:20-alpine AS build
 
 WORKDIR /app
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 
-# Пробрасываем API URL
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
 
 COPY package*.json ./
-RUN npm ci
-
+RUN npm ci  # ставим всё, включая dev-зависимости
 COPY . .
 RUN npm run build
 
-# Этап запуска (без nginx)
+# Этап запуска
 FROM node:20-alpine AS runtime
 
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Устанавливаем простой сервер для отдачи статики
 RUN npm install -g serve
 
-# Копируем собранный фронт
 COPY --from=build /app/dist ./dist
 
-# Открываем порт
 EXPOSE 8080
-
-# Слушаем на всех интерфейсах
 CMD ["serve", "-s", "dist", "-l", "0.0.0.0:8080"]
