@@ -1,26 +1,28 @@
+# Этап сборки
 FROM node:20-alpine AS build
 
 WORKDIR /app
 
 ENV NODE_ENV=production
-
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
 
 COPY package*.json ./
-
 RUN npm ci
-
 COPY . .
-
 RUN npm run build
 
-FROM nginx:alpine AS runtime
+# Этап запуска (без nginx)
+FROM node:20-alpine AS runtime
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist /usr/share/nginx/html
+WORKDIR /app
+ENV NODE_ENV=production
 
-EXPOSE 80
+# Установим лёгкий сервер для статики
+RUN npm install -g serve
 
-CMD ["nginx", "-g", "daemon off;"]
+# Копируем собранный фронт
+COPY --from=build /app/dist ./dist
 
+# Слушаем на всех интерфейсах
+E
