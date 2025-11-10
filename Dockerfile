@@ -1,26 +1,30 @@
-# Этап сборки
 FROM node:20-alpine AS build
 
 WORKDIR /app
-ENV NODE_ENV=development
 
+ARG VITE_APP_NAME="Fullstack Auth"
 ARG VITE_API_URL
+
+
+ENV VITE_APP_NAME=${VITE_APP_NAME}
 ENV VITE_API_URL=${VITE_API_URL}
 
 COPY package*.json ./
-RUN npm ci  # ставим всё, включая dev-зависимости
+RUN npm install
+
 COPY . .
+
 RUN npm run build
 
-# Этап запуска
 FROM node:20-alpine AS runtime
 
 WORKDIR /app
+
+# Copy application source, build output and dependencies
+COPY --from=build /app /app
+
 ENV NODE_ENV=production
 
-RUN npm install -g serve
+EXPOSE 4173
 
-COPY --from=build /app/dist ./dist
-
-EXPOSE 8080
-CMD ["serve", "-s", "dist", "-l", "0.0.0.0:8080"]
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "4173"]
