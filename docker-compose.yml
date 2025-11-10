@@ -19,6 +19,8 @@ services:
     ports:
       - "${PORT:-5000}:5000"
     restart: unless-stopped
+    networks:
+      - shelter-net
 
   mongo:
     image: mongo:6.0
@@ -31,7 +33,13 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-adminpassword}
     volumes:
       - mongo_data:/data/db
+    networks:
+      - shelter-net
 
 volumes:
   mongo_data:
   static_data:
+
+networks:
+  shelter-net:
+    driver: bridge
