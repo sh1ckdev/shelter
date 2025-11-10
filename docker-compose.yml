@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   backend:
     container_name: shelter-backend
@@ -27,6 +25,8 @@ services:
     image: mongo:6.0
     container_name: shelter-mongo
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-adminpassword}
@@ -38,19 +38,14 @@ services:
           "CMD",
           "mongosh",
           "--quiet",
-          "--username",
-          "$${MONGO_INITDB_ROOT_USERNAME}",
-          "--password",
-          "$${MONGO_INITDB_ROOT_PASSWORD}",
-          "--authenticationDatabase",
-          "admin",
+          "mongodb://$${MONGO_INITDB_ROOT_USERNAME}:$${MONGO_INITDB_ROOT_PASSWORD}@localhost:27017/admin?authSource=admin",
           "--eval",
-          "db.adminCommand('ping')",
+          "db.runCommand({ ping: 1 })",
         ]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 30s
 
 volumes:
   mongo_data:
