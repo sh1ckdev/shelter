@@ -13,8 +13,7 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_me_refresh}
       CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:8080}
     depends_on:
-      mongo:
-        condition: service_healthy
+      - mongo
     volumes:
       - static_data:/app/static
     ports:
@@ -32,22 +31,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-adminpassword}
     volumes:
       - mongo_data:/data/db
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "mongosh",
-          "--quiet",
-          "mongodb://$${MONGO_INITDB_ROOT_USERNAME}:$${MONGO_INITDB_ROOT_PASSWORD}@localhost:27017/admin?authSource=admin",
-          "--eval",
-          "db.runCommand({ ping: 1 })",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
 volumes:
   mongo_data:
   static_data:
-
